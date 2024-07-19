@@ -3,15 +3,19 @@
  */
 package com.smarsh.odpa.repository;
 
+import com.mongodb.bulk.BulkWriteResult;
 import com.smarsh.odpa.entity.S3AttributesItem;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public class S3AttributesRepository {
@@ -35,5 +39,15 @@ public class S3AttributesRepository {
     }catch (Exception e){
       e.printStackTrace();
     }
+  }
+
+  public void bulkWrite(List<S3AttributesItem> s3AttributesItems) {
+    BulkOperations bulkInsertion = siteMongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED,
+        S3AttributesItem.class);
+    for (S3AttributesItem item : s3AttributesItems) {
+      bulkInsertion.insert(item);
+    }
+    BulkWriteResult bulkWriteResult = bulkInsertion.execute();
+    System.out.println("S3Attributes Bulk insert of "+ bulkWriteResult.getInsertedCount());
   }
 }

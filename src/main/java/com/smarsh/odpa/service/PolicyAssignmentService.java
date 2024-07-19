@@ -18,7 +18,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 @Service
 public class PolicyAssignmentService {
@@ -45,8 +47,31 @@ public class PolicyAssignmentService {
       latestSnapshot.ifPresent(validDocs::add);
     });
 
-    List<ArchiveMetrics> fiveHundredElements = validDocs.subList(0, 500);
+//    List<ArchiveMetrics> fiveHundredElements = validDocs.subList(0, 500);
+//    assignPolicyToEachDoc(policy, fiveHundredElements);
 
+    assignPolicyToAllDoc(policy, validDocs);
+  }
+
+  private void assignPolicyToAllDoc(String policy, List<ArchiveMetrics> validDocs) {
+    List<S3AttributesItem> s3AttributesItems = validDocs.stream().map(archiveMetrics -> {
+      return mapToS3AttributeItem(archiveMetrics, policy);
+    }).toList();
+
+    List<RetentionPolicyMapRecord> retentionPolicyMapRecords = validDocs.stream().map(archiveMetrics -> {
+      return mapToRetentionPolicyMap(archiveMetrics, policy);
+    }).toList();
+
+    long startTimeRetention = System.nanoTime();
+    retentionPolicyMapRepository.bulkWrite(retentionPolicyMapRecords);
+    s3AttributesRepository.bulkWrite(s3AttributesItems);
+    long endTimeRetention = System.nanoTime();
+    double elapsedTimeInSecRetention = (endTimeRetention - startTimeRetention) / 1_000_000_000.0;
+
+    System.out.println("Assignment Time Taken: "+ elapsedTimeInSecRetention);
+  }
+
+  private void assignPolicyToEachDoc(String policy, List<ArchiveMetrics> fiveHundredElements) {
     long startTimeRetention = System.nanoTime();
     for (ArchiveMetrics archiveMetrics : fiveHundredElements) {
       insertIntoRetentionPolicyMap(archiveMetrics, policy);
@@ -55,15 +80,6 @@ public class PolicyAssignmentService {
     long endTimeRetention = System.nanoTime();
     double elapsedTimeInSecRetention = (endTimeRetention - startTimeRetention) / 1_000_000_000.0;
     System.out.println("Retention Time Taken: "+ elapsedTimeInSecRetention);
-
-//    long startTimeS3Attributes = System.nanoTime();
-//    for (ArchiveMetrics archiveMetrics : validDocs) {
-//      insertIntoS3Attributes(archiveMetrics, policy);
-//    }
-//    long endTimeS3Attributes = System.nanoTime();
-//    long elapsedTimeInSecS3Attributes = (endTimeS3Attributes - startTimeS3Attributes) / 1_000_000_000.0;
-//    System.out.println("S3 Attributes Time Taken: "+ elapsedTimeInSecS3Attributes);
-
   }
 
   private void insertIntoS3Attributes(ArchiveMetrics archiveMetrics, String policy) {

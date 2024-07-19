@@ -46,7 +46,7 @@ public class SiteMongoDbConfiguration extends AbstractMongoClientConfiguration {
   @Override
   @Bean("siteMongoDbFactory")
   public MongoDatabaseFactory mongoDbFactory() {
-    return new SiteMongoDbFactory(mongoClient(), "sanity2");
+    return new SiteMongoDbFactory(mongoClient(), "sanity1");
   }
 
 

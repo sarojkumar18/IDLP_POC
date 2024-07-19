@@ -3,14 +3,19 @@
  */
 package com.smarsh.odpa.repository;
 
+import com.mongodb.bulk.BulkWriteResult;
 import com.smarsh.odpa.entity.RetentionPolicyMapRecord;
+import com.smarsh.odpa.entity.S3AttributesItem;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public class RetentionPolicyMapRepository {
@@ -51,5 +56,15 @@ public class RetentionPolicyMapRepository {
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  public void bulkWrite(List<RetentionPolicyMapRecord> records) {
+    BulkOperations bulkInsertion = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED,
+        RetentionPolicyMapRecord.class);
+    for (RetentionPolicyMapRecord record : records) {
+      bulkInsertion.insert(record);
+    }
+    BulkWriteResult bulkWriteResult = bulkInsertion.execute();
+    System.out.println("RetentionPolicyMap Bulk insert of "+ bulkWriteResult.getInsertedCount());
   }
 }

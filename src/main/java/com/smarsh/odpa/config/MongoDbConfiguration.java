@@ -48,7 +48,7 @@ public class MongoDbConfiguration extends AbstractMongoClientConfiguration {
   @Primary
   @Bean
   public MongoDatabaseFactory mongoDbFactory() {
-    return new MongoDbFactory(mongoClient(), "sanity2");
+    return new MongoDbFactory(mongoClient(), "sanity1");
   }
 
   @Override

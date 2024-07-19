@@ -49,7 +49,7 @@ public class OnDemandPolicyAssignmentApplication {
 
 	public List<String> readFileCSV() throws IOException {
 		List<String> gcIds = new ArrayList<>();
-		ClassPathResource resource = new ClassPathResource("gcid.csv"); // Replace "data.csv" with your file name
+		ClassPathResource resource = new ClassPathResource("gcid.csv");
 
 		InputStream inputStream = resource.getInputStream();
 		try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
