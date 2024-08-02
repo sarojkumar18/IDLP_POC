@@ -63,6 +63,12 @@
 			<version>5.5.1</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.actiance.platform.sfab.cis</groupId>
+			<artifactId>actiance-cis-persistence-index</artifactId>
+			<version>3.4.0.15-release</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

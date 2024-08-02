@@ -18,9 +18,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
 
 @Service
 public class PolicyAssignmentService {
@@ -47,10 +45,10 @@ public class PolicyAssignmentService {
       latestSnapshot.ifPresent(validDocs::add);
     });
 
-//    List<ArchiveMetrics> fiveHundredElements = validDocs.subList(0, 500);
+    List<ArchiveMetrics> fiveHundredElements = validDocs.subList(0, 500);
 //    assignPolicyToEachDoc(policy, fiveHundredElements);
 
-    assignPolicyToAllDoc(policy, validDocs);
+    assignPolicyToAllDoc(policy, fiveHundredElements);
   }
 
   private void assignPolicyToAllDoc(String policy, List<ArchiveMetrics> validDocs) {
@@ -64,33 +62,55 @@ public class PolicyAssignmentService {
 
     long startTimeRetention = System.nanoTime();
     retentionPolicyMapRepository.bulkWrite(retentionPolicyMapRecords);
-    s3AttributesRepository.bulkWrite(s3AttributesItems);
     long endTimeRetention = System.nanoTime();
-    double elapsedTimeInSecRetention = (endTimeRetention - startTimeRetention) / 1_000_000_000.0;
+    long elapsedTimeInSecRetention = (endTimeRetention - startTimeRetention) / 1_000_000;
+    System.out.println("Retention Time Taken: "+ elapsedTimeInSecRetention);
 
-    System.out.println("Assignment Time Taken: "+ elapsedTimeInSecRetention);
+    long startTimes3 = System.nanoTime();
+    s3AttributesRepository.bulkWrite(s3AttributesItems);
+    long endTimeS3 = System.nanoTime();
+    long elapsedTimeInMillisS3 = (endTimeS3 - startTimes3) / 1_000_000;
+    System.out.println("S3 Time Taken: "+ elapsedTimeInMillisS3);
   }
 
   private void assignPolicyToEachDoc(String policy, List<ArchiveMetrics> fiveHundredElements) {
-    long startTimeRetention = System.nanoTime();
+//    long startTimeRetention = System.nanoTime();
+    List<Long> retentionPolicyMapTimeList = new ArrayList<>();
+    List<Long> s3AttibutesTimeList = new ArrayList<>();
     for (ArchiveMetrics archiveMetrics : fiveHundredElements) {
-      insertIntoRetentionPolicyMap(archiveMetrics, policy);
-      insertIntoS3Attributes(archiveMetrics, policy);
+      insertIntoRetentionPolicyMap(archiveMetrics, policy, retentionPolicyMapTimeList);
+      insertIntoS3Attributes(archiveMetrics, policy, s3AttibutesTimeList);
     }
-    long endTimeRetention = System.nanoTime();
-    double elapsedTimeInSecRetention = (endTimeRetention - startTimeRetention) / 1_000_000_000.0;
-    System.out.println("Retention Time Taken: "+ elapsedTimeInSecRetention);
+    long minRetention = retentionPolicyMapTimeList.stream().mapToLong(Long::longValue).min().orElseThrow();
+    long maxRetention = retentionPolicyMapTimeList.stream().mapToLong(Long::longValue).max().orElseThrow();
+    System.out.println("minRetention: "+minRetention +", maxRetention: "+ maxRetention);
+
+    long minS3 = s3AttibutesTimeList.stream().mapToLong(Long::longValue).min().orElseThrow();
+    long maxS3 = s3AttibutesTimeList.stream().mapToLong(Long::longValue).max().orElseThrow();
+    System.out.println("minS3: "+minS3 +", maxS3: "+ maxS3);
+
+//    long endTimeRetention = System.nanoTime();
+//    double elapsedTimeInSecRetention = (endTimeRetention - startTimeRetention) / 1_000_000_000.0;
+//    System.out.println("Retention Time Taken: "+ elapsedTimeInSecRetention);
   }
 
-  private void insertIntoS3Attributes(ArchiveMetrics archiveMetrics, String policy) {
+  private void insertIntoS3Attributes(ArchiveMetrics archiveMetrics, String policy, List<Long> retentionPolicyMapTimeList) {
     S3AttributesItem s3AttributesItem = mapToS3AttributeItem(archiveMetrics, policy);
+    long startTimeRetention = System.nanoTime();
     s3AttributesRepository.upsert(s3AttributesItem);
+    long endTimeRetention = System.nanoTime();
+    long elapsedTimeInMillisRetention = (endTimeRetention - startTimeRetention) / 1_000_000;
+    retentionPolicyMapTimeList.add(elapsedTimeInMillisRetention);
   }
 
-  private void insertIntoRetentionPolicyMap(ArchiveMetrics archiveMetrics, String policy) {
+  private void insertIntoRetentionPolicyMap(ArchiveMetrics archiveMetrics, String policy, List<Long> s3AttibutesTimeList) {
     RetentionPolicyMapRecord retentionPolicyMapRecord = mapToRetentionPolicyMap(archiveMetrics,
         policy);
+    long startTimeRetention = System.nanoTime();
     retentionPolicyMapRepository.upsert(retentionPolicyMapRecord);
+    long endTimeRetention = System.nanoTime();
+    long elapsedTimeInMillisRetention = (endTimeRetention - startTimeRetention) / 1_000_000;
+    s3AttibutesTimeList.add(elapsedTimeInMillisRetention);
   }
 
   private RetentionPolicyMapRecord mapToRetentionPolicyMap(ArchiveMetrics archiveMetrics, String policy) {

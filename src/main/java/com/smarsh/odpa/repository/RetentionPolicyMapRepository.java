@@ -5,7 +5,6 @@ package com.smarsh.odpa.repository;
 
 import com.mongodb.bulk.BulkWriteResult;
 import com.smarsh.odpa.entity.RetentionPolicyMapRecord;
-import com.smarsh.odpa.entity.S3AttributesItem;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.BulkOperations;
@@ -61,9 +60,7 @@ public class RetentionPolicyMapRepository {
   public void bulkWrite(List<RetentionPolicyMapRecord> records) {
     BulkOperations bulkInsertion = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED,
         RetentionPolicyMapRecord.class);
-    for (RetentionPolicyMapRecord record : records) {
-      bulkInsertion.insert(record);
-    }
+    bulkInsertion.insert(records);
     BulkWriteResult bulkWriteResult = bulkInsertion.execute();
     System.out.println("RetentionPolicyMap Bulk insert of "+ bulkWriteResult.getInsertedCount());
   }
