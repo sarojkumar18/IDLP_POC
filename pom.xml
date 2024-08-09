@@ -69,7 +69,55 @@
 			<version>3.4.0.15-release</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.smarsh.search</groupId>
+			<artifactId>ea-search-sdk</artifactId>
+			<version>1.0.99</version>
+			<exclusions>
+				<exclusion>
+					<groupId>co.elastic.clients</groupId>
+					<artifactId>elasticsearch-java</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.smarsh.search</groupId>
+			<artifactId>ea-search-models</artifactId>
+			<version>1.0.99</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.smarsh.search</groupId>
+			<artifactId>ea-search-rest-sdk</artifactId>
+			<version>1.0.99</version>
+		</dependency>
+
+
 	</dependencies>
+
+	<distributionManagement>
+		<repository>
+			<id>artifactory-central</id>
+			<name>smarsh-artifactory</name>
+			<url>https://smarsh.jfrog.io/smarsh/libs-release-local</url>
+		</repository>
+	</distributionManagement>
+
+	<repositories>
+		<repository>
+			<id>artifactory-central</id>
+			<name>smarsh-artifactory</name>
+			<url>https://smarsh.jfrog.io/smarsh/libs-release-local</url>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>artifactory-central</id>
+			<name>smarsh-artifactory</name>
+			<url>https://smarsh.jfrog.io/smarsh/libs-release-local</url>
+		</pluginRepository>
+	</pluginRepositories>
 
 	<build>
 		<plugins>

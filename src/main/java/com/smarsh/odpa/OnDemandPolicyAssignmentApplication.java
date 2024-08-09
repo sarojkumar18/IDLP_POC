@@ -1,12 +1,8 @@
 package com.smarsh.odpa;
 
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
-import com.smarsh.odpa.model.GcId;
+import com.smarsh.odpa.indexes.EsPromotionEvaluation;
 import com.smarsh.odpa.service.PolicyAssignmentService;
+import com.smarsh.search.model.SearchResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,17 +13,14 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-import org.springframework.util.ResourceUtils;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @SpringBootApplication
 @Slf4j
@@ -37,12 +30,20 @@ public class OnDemandPolicyAssignmentApplication {
 	@Autowired
 	private PolicyAssignmentService service;
 
+	@Autowired
+	private EsPromotionEvaluation esPromotionEvaluation;
+
 	public static void main(String[] args) {
 		SpringApplication.run(OnDemandPolicyAssignmentApplication.class, args);
 	}
 
 	@EventListener(ApplicationReadyEvent.class)
-	public void loadGcIdFromCSVFile() throws IOException {
+	public void execute() throws IOException {
+		String tenantId = "sanity2";
+		esPromotionEvaluation.filterFromEsAndPublishDocuments(tenantId, UUID.fromString("4bcebecf-a43c-41ed-9e41-d19f5ab82793"), true);
+	}
+
+	private void executePolicyAssignment() throws IOException {
 		List<String> gcIds = readFileCSV();
 		service.assignPolicyToTheDocuments(gcIds, "741f6584-348e-4157-9dfa-02984e0f9635");
 	}
